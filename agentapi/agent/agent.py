@@ -5,7 +5,7 @@ from __future__ import annotations
 import inspect
 from typing import Any, AsyncIterator, Callable
 
-from agentapi.agent.memory import ConversationMemory
+from agentapi.agent.memory import InMemoryMemory, MemoryBackend
 from agentapi.agent.tools import ToolDefinition, parse_tool_args, to_tool_definition
 from agentapi.config.settings import get_settings
 from agentapi.errors import AgentConfigurationError
@@ -27,6 +27,7 @@ class Agent:
         self,
         *,
         system_prompt: str,
+        memory: MemoryBackend | None = None,
         provider: str | BaseProvider | None = None,
         model: str | None = None,
         tools: list[Callable[..., Any]] | None = None,
@@ -44,7 +45,7 @@ class Agent:
         self.tool_calling = self._default_tool_calling_for(self.provider_name)
         if tool_calling:
             self.tool_calling.update(tool_calling)
-        self.memory = ConversationMemory(system_prompt=system_prompt)
+        self.memory = memory or InMemoryMemory(system_prompt=system_prompt)
 
         self._settings = settings
         self._provider: BaseProvider | None = provider if isinstance(provider, BaseProvider) else None
