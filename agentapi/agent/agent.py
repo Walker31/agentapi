@@ -151,6 +151,8 @@ class Agent:
                     tools=self._tool_schemas(),
                     tool_calling=self.tool_calling,
                 )
+            except AgentAPIProviderError:
+                raise
             except Exception as exc:
                 logger.error(
                     "[AgentAPI] Provider error in run(): %s. Check your API key and provider configuration.",
@@ -219,7 +221,6 @@ class Agent:
 
         collected: list[str] = []
 
-        # Narrow the provider error wrapper to only the streaming call.
         try:
             async for token in provider.stream(
                 conversation_messages,
@@ -228,6 +229,8 @@ class Agent:
             ):
                 collected.append(token)
                 yield token
+        except AgentAPIProviderError:
+            raise
         except Exception as exc:
             logger.error(
                 "[AgentAPI] Streaming error: %s. Check your provider configuration and API key.",
