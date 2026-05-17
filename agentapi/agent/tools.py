@@ -82,7 +82,7 @@ def _build_openai_tool_schema(
     *,
     description: str | None = None,
     context: str | None = None,
-    param_name: str | None = None,
+    name: str | None = None,
 ) -> dict[str, Any]:
     signature = inspect.signature(func)
     properties: dict[str, Any] = {}
