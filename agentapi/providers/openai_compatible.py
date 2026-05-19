@@ -7,7 +7,7 @@ from typing import Any, AsyncIterator
 
 import httpx
 
-from agentapi.errors import AgentProviderError
+from agentapi.errors import AgentProviderError, AgentConfigurationError
 from agentapi.providers.base import BaseProvider, ProviderResponse, ToolCall
 
 
@@ -23,7 +23,7 @@ class OpenAICompatibleProvider(BaseProvider):
         extra_headers: dict[str, str] | None = None,
     ) -> None:
         if not api_key:
-            raise ValueError("API key is required for provider initialization")
+            raise AgentConfigurationError("Missing API key. Set the appropriate API key in your .env file.")
 
         self.api_key = api_key
         self.model = model
