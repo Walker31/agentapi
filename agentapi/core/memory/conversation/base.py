@@ -1,47 +1,61 @@
 from __future__ import annotations
-from abc import ABC,abstractmethod
-from typing import Any
+
+from abc import ABC, abstractmethod
+
+from agentapi.core.memory.types import MemoryMessage
+
 
 class BaseConversationStore(ABC):
     """
     Abstract interface for persistent conversation storage.
 
-    A conversation store is responsible only for storing and retrieving chronological chat history
+    A ConversationStore is responsible only for storing and retrieving
+    chronological conversation history.
 
-    It MUST NOT:
-        - Generate embeddings
-        - perform vector search
-        - Build prompts
-        - Call LLMs
+    Each store instance is bound to a single conversation.
     """
 
     @abstractmethod
-    async def create_conversation(
-        self,conversation_id:str,
-    ) -> None:
-        """Create a conversation if it doesn't already exist."""
-        pass
+    async def initialize(self) -> None:
+        """
+        Initialize the storage backend.
+
+        Implementations should create any required tables,
+        collections, or indexes if they do not already exist.
+        """
 
     @abstractmethod
-    async def save_messages(
-        self,conversation_id:str,
-        message: dict[str,Any],
+    async def create_conversation(self) -> None:
+        """
+        Create the current conversation if it does not exist.
+        """
+
+    @abstractmethod
+    async def save_message(
+        self,
+        message: MemoryMessage,
     ) -> None:
-        """ Persistent a single message"""
+        """
+        Persist a single message.
+        """
 
     @abstractmethod
     async def get_recent_messages(
         self,
-        conversation_id: str,
         limit: int,
-    ) -> list[dict[str, Any]]:
+    ) -> list[MemoryMessage]:
         """
-        Return the most recent messages in chronological order.
+        Return the latest messages in chronological order.
         """
 
     @abstractmethod
-    async def clear_conversation(
-        self,
-        conversation_id: str,
-    ) -> None:
-        """Delete every message in a conversation."""
+    async def clear_conversation(self) -> None:
+        """
+        Delete all messages belonging to the current conversation.
+        """
+
+    @abstractmethod
+    async def close(self) -> None:
+        """
+        Close any open database connections.
+        """

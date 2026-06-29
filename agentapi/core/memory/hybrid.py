@@ -27,7 +27,7 @@ class HybridMemory(MemoryBackend):
         self._retrieval_top_k = retrieval_top_k
     
     async def build_messages(self,current_query:str) -> list[dict[str,Any]]:
-        recent_messages = await self._conversation_store.get_recent_messages(self.conversation_id,self.recent_window)
+        recent_messages = await self._conversation_store.get_recent_messages(self.recent_window)
         query_embedding  = await self._embedding_provider.embed(current_query)
         retrieved_memories = await self._vector_store.search(self.conversation_id,query_embedding,self._retrieval_top_k)
 
@@ -39,7 +39,7 @@ class HybridMemory(MemoryBackend):
     
     async def add(self,message:dict[str,Any]) -> None:
         memory_message = MemoryMessage.from_dict(message)
-        await self._conversation_store.save_messages(self.conversation_id,memory_message)
+        await self._conversation_store.save_message(memory_message)
         
         embedding = await self._embedding_provider.embed(memory_message.content)
         await self._vector_store.upsert(conversation_id = self.conversation_id,message_id= memory_message.id,embeddings=embedding,
@@ -49,5 +49,5 @@ class HybridMemory(MemoryBackend):
         })
 
     async def reset(self) -> None:
-        await self._conversation_store.clear_conversation(self.conversation_id)
+        await self._conversation_store.clear_conversation()
         await self._vector_store.delete(self.conversation_id)
