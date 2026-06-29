@@ -1,30 +1,34 @@
+"""
+Abstract embedding provider.
+"""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
 
-class BaseEmbeddingProvider(ABC):
-    """
-    Generates vector embeddings for text.
+from .types import Embedding
 
-    HybridMemory depends only on this interface,
-    allowing any embedding model to be plugged in.
-    """
+
+class BaseEmbeddingProvider(ABC):
 
     @abstractmethod
     async def embed(
         self,
         text: str,
-    ) -> list[float]:
+    ) -> Embedding:
         """
-        Generate an embedding for a single piece of text.
+        Generate an embedding.
         """
 
-    @abstractmethod
     async def embed_batch(
         self,
         texts: list[str],
-    ) -> list[list[float]]:
+    ) -> list[Embedding]:
         """
-        Generate embeddings for multiple texts.
+        Default batch implementation.
         """
-    
+
+        return [
+            await self.embed(text)
+            for text in texts
+        ]

@@ -1,38 +1,59 @@
+"""
+Abstract vector database interface.
+"""
+
 from __future__ import annotations
 
-from abc import ABC,abstractmethod
+from abc import ABC, abstractmethod
 from typing import Any
+
+from .types import SearchResult, VectorRecord
+
 
 class BaseVectorStore(ABC):
     """
-    Stores and retrieves semantic vectors.
+    Abstract interface for vector storage backends.
     """
+
+    @abstractmethod
+    async def initialize(self) -> None:
+        """
+        Initialize the vector database.
+        """
 
     @abstractmethod
     async def upsert(
         self,
-        conversation_id:str,
-        message_id:str,
-        embeddings:list[float],
-        metadata:dict[str,Any]
+        record: VectorRecord,
     ) -> None:
-        """Insert or update a vector."""
-    
+        """
+        Insert or update a vector.
+        """
+
     @abstractmethod
     async def search(
         self,
-        conversation_id:str,
-        embeddings:list[float],
-        top_k:int
-    ) -> list[dict[str,Any]]:
-        """Search for similar messages"""
+        vector: list[float],
+        *,
+        top_k: int = 5,
+        filters: dict[str, Any] | None = None,
+    ) -> list[SearchResult]:
+        """
+        Perform semantic similarity search.
+        """
 
     @abstractmethod
     async def delete(
-        self,conversation_id:str
+        self,
+        *,
+        filters: dict[str, Any],
     ) -> None:
-        """Delete all vectors for a conversation"""
-    
+        """
+        Delete vectors matching filters.
+        """
+
     @abstractmethod
     async def close(self) -> None:
-        """Release any resources"""
+        """
+        Close any open connections.
+        """

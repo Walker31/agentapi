@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 
-from agentapi.core.memory.types import MemoryMessage
+from agentapi.core.memory.document import MemoryDocument
 
 
 class BaseConversationStore(ABC):
@@ -31,21 +31,21 @@ class BaseConversationStore(ABC):
         """
 
     @abstractmethod
-    async def save_message(
+    async def save_document(
         self,
-        message: MemoryMessage,
+        document: MemoryDocument,
     ) -> None:
         """
-        Persist a single message.
+        Persist a single document.
         """
 
     @abstractmethod
-    async def get_recent_messages(
+    async def get_recent_documents(
         self,
         limit: int,
-    ) -> list[MemoryMessage]:
+    ) -> list[MemoryDocument]:
         """
-        Return the latest messages in chronological order.
+        Return the latest documents in chronological order.
         """
 
     @abstractmethod
