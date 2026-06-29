@@ -31,6 +31,21 @@ class MemoryBackend(ABC):
     def reset(self) -> None:
         """Clear all stored messages for the conversation."""
 
+    async def aadd(self, message:dict[str,Any]) -> None:
+        self.add(message)
+    
+    async def build_messages(
+        self,
+        current_query: str,
+    ) -> list[dict[str, Any]]:
+        """
+        Build the conversation context.
+
+        Default implementation simply returns the stored messages.
+        Advanced memory backends can override this.
+        """
+        return self.messages
+
 
 class InMemoryMemory(MemoryBackend):
     """Stores chat messages in process memory with per-conversation isolation.

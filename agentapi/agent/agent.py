@@ -80,17 +80,16 @@ class Agent:
         """Clear conversation state but preserve the agent system prompt."""
         self.memory.reset()
 
-    def _conversation_messages(self, extra_messages: list[dict[str, Any]] | None = None) -> list[dict[str, Any]]:
-        messages: list[dict[str, Any]] = [{"role": "system", "content": self.system_prompt}]
-        messages.extend(self.memory.messages)
-        if extra_messages:
-            messages.extend(extra_messages)
+    async def _build_conversation_messages(self,user_message:str)-> list[dict[str,Any]]:
+        messages = [{"role":"system","content":self.system_prompt}]
+        messages.extend(await self.memory.build_messages(user_message))
+        messages.append({"role":"user","content":user_message})
         return messages
 
     async def run(self, message: str, *, max_tool_rounds: int = 3) -> str:
         """Execute a chat completion with optional tool-calling loop."""
 
-        conversation_messages = self._conversation_messages([{"role": "user", "content": message}])
+        conversation_messages = await self._build_conversation_messages(message)
         provider = self._get_provider()
 
         for _ in range(max_tool_rounds + 1):
@@ -133,13 +132,13 @@ class Agent:
                 await self._execute_tool_calls(response.tool_calls, conversation_messages)
                 continue
 
-            self.memory.add({"role": "user", "content": message})
-            self.memory.add({"role": "assistant", "content": response.content})
+            await self.memory.aadd({"role": "user", "content": message})
+            await self.memory.aadd({"role": "assistant", "content": response.content})
             return response.content
 
         fallback = "Tool loop reached max rounds without final response"
-        self.memory.add({"role": "user", "content": message})
-        self.memory.add({"role": "assistant", "content": fallback})
+        await self.memory.aadd({"role": "user", "content": message})
+        await self.memory.aadd({"role": "assistant", "content": fallback})
         return fallback
 
     def stream(self, message: str) -> StreamingResponse:
@@ -177,7 +176,7 @@ class Agent:
     async def _stream_generator(self, message: str) -> AsyncIterator[str]:
         """Internal async generator that streams tokens from the provider."""
 
-        conversation_messages = self._conversation_messages([{"role": "user", "content": message}])
+        conversation_messages = await self._build_conversation_messages(message)
         provider = self._get_provider()
 
         collected: list[str] = []
@@ -202,8 +201,8 @@ class Agent:
             ) from exc
 
         full_text = "".join(collected)
-        self.memory.add({"role": "user", "content": message})
-        self.memory.add({"role": "assistant", "content": full_text})
+        await self.memory.aadd({"role": "user", "content": message})
+        await self.memory.aadd({"role": "assistant", "content": full_text})
 
     def _create_provider(self, settings: Any) -> BaseProvider:
         custom_factory = self._custom_provider_factories.get(self.provider_name)
